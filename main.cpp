@@ -28,7 +28,6 @@ void mysetup(void *buf, int size) {
     printf("Initialize memory: size=%d, start_address=%p \n", size, buf);
 
     metadata_size = sizeof(struct metadata);
-    printf("Size of metadata in bytes: %d \n", metadata_size);
 
     struct metadata *initial = static_cast<metadata *>(buf);
     initial->next = NULL;
@@ -93,29 +92,28 @@ void myfree(void *p) {
     }
 }
 
-void test_max_size() {
-    int memory_size = 102400;
+int max_size_test(bool progress=false) {
+    printf("\n========== TEST: max_size_test ==========\n");
+
+    int memory_size = 1048576;
 
     void *ptr = malloc(memory_size);
     if (ptr == NULL) {
         printf("Can't allocate memory.\n");
-    } else {
-        printf("Test memory allocated: Start address: %p.\n", ptr);
+        return 1;
     }
 
     mysetup(ptr, memory_size);
-
-    printf("[max_size_test] Memory state:");
-    print_memory_map();
 
     int bytes_to_allocate = 51200;
     int last_allocated = 0;
     while (true) {
         void *allocated_ptr = myalloc(bytes_to_allocate);
         if (allocated_ptr != NULL) {
-            printf("[max_size_test] Current max size: %f %% (%d / %d)\n",
-                   (double) bytes_to_allocate / memory_size * 100, bytes_to_allocate, memory_size);
-
+            if (progress) {
+                printf("Current max size: %f %% (%d / %d)\n",
+                       (double) bytes_to_allocate / memory_size * 100, bytes_to_allocate, memory_size);
+            }
             last_allocated = bytes_to_allocate;
             bytes_to_allocate += (memory_size - bytes_to_allocate) / 2;
             myfree(allocated_ptr);
@@ -128,15 +126,48 @@ void test_max_size() {
         }
     }
 
-    printf("[max_size_test] Test finished. Max size: %f %% (%d / %d)\n",
+    printf("Test finished. Max size: %f %% (%d / %d)\n",
            (double) bytes_to_allocate / memory_size * 100, bytes_to_allocate, memory_size);
 
-    printf("[max_size_test] Memory state:");
-    print_memory_map();
+    return 0;
+}
 
+int effective_size_test(bool progress=false) {
+    printf("\n========== TEST: effective_size_test ==========\n");
+
+    int memory_size = 1048576;
+
+    void *ptr = malloc(memory_size);
+    if (ptr == NULL) {
+        printf("Can't allocate memory.\n");
+        return 1;
+    }
+
+    mysetup(ptr, memory_size);
+
+    int bytes_to_allocate = 16;
+    int memory_allocated = 0;
+    while (true) {
+        void *allocated_ptr = myalloc(bytes_to_allocate);
+        if (allocated_ptr != NULL) {
+            memory_allocated += bytes_to_allocate;
+            if (progress) {
+                printf("Current effective size: %f %% (%d / %d)\n",
+                       (double) memory_allocated / memory_size * 100, memory_allocated, memory_size);
+            }
+        } else {
+            break;
+        }
+    }
+
+    printf("Test finished. Effective size: %f %% (%d / %d)\n",
+           (double) memory_allocated / memory_size * 100, memory_allocated, memory_size);
+
+    return 0;
 }
 
 int main() {
-    test_max_size();
+    max_size_test();
+    effective_size_test();
     return 0;
 }

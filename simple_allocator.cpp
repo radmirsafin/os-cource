@@ -12,17 +12,6 @@ struct metadata {
 
 struct metadata *memory_blocks = NULL;
 
-void print_memory_map() {
-    struct metadata *current = memory_blocks;
-    printf("\n=> Memory map\n");
-    while (current != NULL) {
-        printf("metadata { address=%p, next=%p, prev=%p, size=%d, is_free=%d, end=%p}\n",
-               current, current->next, current->prev, current->size, current->is_free,
-               reinterpret_cast<unsigned char *>(current) + metadata_size + current->size);
-        current = current->next;
-    }
-}
-
 int get_free_size() {
     int free = 0;
     struct metadata *current = memory_blocks;

@@ -6,7 +6,6 @@
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
-#include <functional>
 
 int max_size_test(bool progress=false) {
     printf("\n========== TEST: max_size_test ==========\n");

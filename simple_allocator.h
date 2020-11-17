@@ -1,7 +1,6 @@
 #ifndef SIMPLE_ALLOCATOR_H
 #define SIMPLE_ALLOCATOR_H
 
-void print_memory_map();
 int get_free_size();
 void mysetup(void *buf, int size);
 void *myalloc(int size);

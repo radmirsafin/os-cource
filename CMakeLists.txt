@@ -3,4 +3,4 @@ project(memory_allocator)
 
 set(CMAKE_CXX_STANDARD 98)
 
-add_executable(memory_allocator main.cpp)
+add_executable(test_simple_allocator test_simple_allocator.cpp simple_allocator.cpp)

@@ -80,18 +80,18 @@ void cache_setup(struct cache *cache, int object_size)
 
 struct slab* create_slab(int slab_order, int slab_objects, int object_size) {
     void *allocated_ptr = alloc_slab(slab_order);
-    struct slab* new = (struct slab*) allocated_ptr;
-    new->free_count = slab_objects;
+    struct slab* slab = (struct slab*) allocated_ptr;
+    slab->free_count = slab_objects;
 
     struct object* prev_obj = allocated_ptr + sizeof(struct slab) + 1;
-    new->free_obj_head = prev_obj;
+    slab->free_obj_head = prev_obj;
 
     for (int i = 0; i < slab_objects - 1; i++) {
         struct object* next_obj = (void*) prev_obj + object_size + 1;
         prev_obj->next = next_obj;
         prev_obj = next_obj;
     }
-    return new;
+    return slab;
 }
 
 void remove_slab_from_cache(struct cache* cache, struct slab* slab) {
@@ -163,18 +163,6 @@ void *cache_alloc(struct cache *cache) {
 }
 
 /**
- * Функция освобождения будет вызвана когда работа с
- * аллокатором будет закончена. Она должна освободить
- * всю память занятую аллокатором. Проверяющая система
- * будет считать ошибкой, если не вся память будет
- * освбождена.
- **/
-void cache_release(struct cache *cache)
-{
-    /* Реализуйте эту функцию. */
-}
-
-/**
  * Функция освобождения памяти назад в кеширующий аллокатор.
  * Гарантируется, что ptr - указатель ранее возвращенный из
  * cache_alloc.
@@ -212,6 +200,29 @@ void cache_shrink(struct cache *cache)
     }
 }
 
+/**
+ * Функция освобождения будет вызвана когда работа с
+ * аллокатором будет закончена. Она должна освободить
+ * всю память занятую аллокатором. Проверяющая система
+ * будет считать ошибкой, если не вся память будет
+ * освбождена.
+ **/
+void cache_release(struct cache *cache)
+{
+    cache_shrink(cache);
+    struct slab* to_free = NULL;
+    while (cache->used_head) {
+        to_free = cache->used_head;
+        cache->used_head = cache->used_head->next;
+        free_slab(to_free);
+    }
+    while (cache->full_head) {
+        to_free = cache->full_head;
+        cache->full_head = cache->full_head->next;
+        free_slab(to_free);
+    }
+}
+
 
 int main() {
     printf("Size of slab: %lu\n", sizeof(struct slab));
@@ -224,6 +235,7 @@ int main() {
     printf("Allocated: %p\n", allocated_ptr);
     cache_free(cache, allocated_ptr);
 
+    cache_release(cache);
     cache_shrink(cache);
 
     free(cache);

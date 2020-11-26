@@ -28,6 +28,7 @@ void *alloc_slab(int order) {
  * функции alloc_slab.
  **/
 void free_slab(void *slab) {
+    printf("Free memory: %p", slab);
     free(slab);
 }
 
@@ -204,7 +205,11 @@ void cache_free(struct cache *cache, void *ptr)
  **/
 void cache_shrink(struct cache *cache)
 {
-    /* Реализуйте эту функцию. */
+    while (cache->empty_head) {
+        struct slab* to_free = cache->empty_head;
+        cache->empty_head = cache->empty_head->next;
+        free_slab(to_free);
+    }
 }
 
 
@@ -215,12 +220,11 @@ int main() {
     struct cache* cache = malloc(sizeof(struct cache));
     cache_setup(cache, 32768);
 
-    for (int i = 0; i < 126; i++) {
-        cache_alloc(cache);
-    }
     void * allocated_ptr = cache_alloc(cache);
     printf("Allocated: %p\n", allocated_ptr);
-
     cache_free(cache, allocated_ptr);
-    printf("");
+
+    cache_shrink(cache);
+
+    free(cache);
 }

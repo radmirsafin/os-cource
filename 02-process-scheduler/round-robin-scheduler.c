@@ -55,6 +55,8 @@ void push_thread(int thread_id) {
 }
 
 int pop_thread() {
+    planner->current_tick = 0;
+
     struct thread* head_thread = planner->queue_head;
     if (head_thread == NULL) {
         return -1;
@@ -68,6 +70,22 @@ int pop_thread() {
     }
 
     return head_thread->thread_id;
+}
+
+/**
+ * Функция должна возвращать идентификатор потока, который в
+ * данный момент занимает CPU, или -1 если такого потока нет.
+ * Единственная ситуация, когда функция может вернуть -1, это
+ * когда нет ни одного активного потока (все созданные потоки
+ * либо уже завершены, либо заблокированы).
+ **/
+int current_thread()
+{
+    if (planner->queue_head) {
+        return planner->queue_head->thread_id;
+    } else {
+        return -1;
+    }
 }
 
 /**
@@ -101,7 +119,6 @@ void exit_thread()
  **/
 void block_thread()
 {
-    printf("Blocked: %d\n", planner->queue_head->thread_id);
     pop_thread();
 }
 
@@ -125,56 +142,8 @@ void timer_tick()
     if (planner->current_tick == planner->time_slice) {
         planner->current_tick = 0;
         int popped = pop_thread();
-        if (popped > 0) {
+        if (popped >= 0) {
             push_thread(popped);
         }
-    }
-}
-
-/**
- * Функция должна возвращать идентификатор потока, который в
- * данный момент занимает CPU, или -1 если такого потока нет.
- * Единственная ситуация, когда функция может вернуть -1, это
- * когда нет ни одного активного потока (все созданные потоки
- * либо уже завершены, либо заблокированы).
- **/
-int current_thread()
-{
-    if (planner->queue_head) {
-        return planner->queue_head->thread_id;
-    } else {
-        return -1;
-    }
-}
-
-int main() {
-    scheduler_setup(3);
-
-    new_thread(3);
-
-    for (int i = 0; i < 5; ++i) {
-        printf("Current: %d\n", current_thread());
-        timer_tick();
-    }
-
-    new_thread(1);
-
-    for (int i = 0; i < 5; ++i) {
-        printf("Current: %d\n", current_thread());
-        timer_tick();
-    }
-
-    block_thread();
-
-    for (int i = 0; i < 5; ++i) {
-        printf("Current: %d\n", current_thread());
-        timer_tick();
-    }
-
-    new_thread(2);
-
-    for (int i = 0; i < 20; ++i) {
-        printf("Current: %d\n", current_thread());
-        timer_tick();
     }
 }

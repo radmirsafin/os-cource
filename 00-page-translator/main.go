@@ -1,10 +1,10 @@
 package main
 
 import (
+	"./internal"
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/radmirsafin/page-translator/internal"
 	"os"
 	"strconv"
 	"strings"
